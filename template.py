@@ -4,9 +4,10 @@ from os import path
 SOLUTION_MODE = True
 data_folder = "Inputs" if SOLUTION_MODE else "Test_inputs"
 
-# Open input, split by empty new line; then sum all calories for each elf
-with open(path.join(data_folder, "day.txt"), "r") as file:
-    content = file.read()
+# Open and prepare input
+def get_input():
+    with open(path.join(data_folder, "day.txt"), "r") as file:
+        content = file.read()
 
 def part1() -> int:
     # Part 1 of the puzzle
