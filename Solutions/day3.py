@@ -1,9 +1,14 @@
+from os import path
 from typing import List, Tuple
 from string import ascii_letters
 
+# Set True for my inputs and False for test inputs
+SOLUTION_MODE = True
+data_folder = "Inputs" if SOLUTION_MODE else "Test_inputs"
+
 def get_input(second_part: bool = False) -> List[Tuple[str]]:
     # Input is separated in two strings (cut in half) in the first part and not separated in the second
-    with open("input.txt", "r") as file:
+    with open(path.join(data_folder, "day3.txt"), "r") as file:
         if second_part:
             rucksacks = [line.strip() for line in file]
         else:
@@ -42,5 +47,6 @@ def part2() -> int:
         score += calculate_rucksack_priority_secondpart(rucksack1=rucksacks[i], rucksack2=rucksacks[i+1], rucksack3=rucksacks[i+2])
     return score
 
-print(part1())
-print(part2())
+if __name__ == "__main__":
+    print(f"Solution to Part1: {part1()}")
+    print(f"Solution to Part2: {part2()}")

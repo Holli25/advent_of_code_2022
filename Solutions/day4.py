@@ -1,7 +1,12 @@
+from os import path
 from typing import List, Tuple
 
+# Set True for my inputs and False for test inputs
+SOLUTION_MODE = True
+data_folder = "Inputs" if SOLUTION_MODE else "Test_inputs"
+
 def get_input() -> List[List[Tuple[str]]]:
-    with open("input.txt", "r") as file:
+    with open(path.join(data_folder, "day4.txt"), "r") as file:
         pairs = [line.strip().split(",") for line in file]
         pairs = [[tuple(int(section) for section in assignment.split("-")) for assignment in pair] for pair in pairs]
         return pairs
@@ -30,5 +35,6 @@ def part2() -> int:
     score = sum([is_overlap(pair, second_part_mode = True) for pair in pairs])
     return score
 
-print(part1())
-print(part2())
+if __name__ == "__main__":
+    print(f"Solution to Part1: {part1()}")
+    print(f"Solution to Part2: {part2()}")
