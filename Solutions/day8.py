@@ -1,8 +1,8 @@
 from os import path
-from typing import List, Tuple
+from typing import List
 
 # Set True for my inputs and False for test inputs
-SOLUTION_MODE = False
+SOLUTION_MODE = True
 data_folder = "Inputs" if SOLUTION_MODE else "Test_inputs"
 
 # Open and prepare input
@@ -96,88 +96,55 @@ def generate_visibility_map(trees: List[List[int]]) -> List[List[int]]:
 
     return visible_trees
 
-def calculate_scenice_view(trees: List[List[int]], row_idx:int, col_idx: int):
-    width, height = len(trees[0]), len(trees)
-    tree = trees[row_idx][col_idx]
-    visible_trees: List[int] = []
-    # Check left if not on left border
-    if col_idx > 0:
-        first_tree = trees[row_idx][col_idx - 1]
-        left_trees = 1
-        for earlier_column in range(col_idx - 2, -1, -1):
-            if earlier_column < 0:
-                break
-            if first_tree <= trees[row_idx][earlier_column]:
-                left_trees += 1
-                first_tree = trees[row_idx][earlier_column]
-            if trees[row_idx][earlier_column] == 9 or earlier_column == 0 or tree < trees[row_idx][earlier_column]:
-                break
-        visible_trees.append(left_trees)
-    else:
-        visible_trees.append(0)
+def get_view_score(trees: List[int], position: int, dimension: int) -> int:
+    # Function calculates the view score for one tree at a marked position
+    height = trees[position]
 
-    # Check right if not on right border
-    if col_idx < width - 1:
-        first_tree = trees[row_idx][col_idx + 1]
-        right_trees = 1
-        for later_column in range(col_idx + 1, width):
-            if first_tree <= trees[row_idx][later_column]:
-                right_trees += 1
-                first_tree = trees[row_idx][later_column]
-            if trees[row_idx][later_column] == 9 or later_column == width - 1 or tree < trees[row_idx][later_column]:
-                break
-        visible_trees.append(right_trees)
-    else:
-        visible_trees.append(0)
+    # Horizontal
+    # Get the amount of trees to the left and right
+    left_index = position % dimension
+    right_side = dimension - left_index
 
-    # Check up if not on upper border
-    if row_idx > 0:
-        first_tree = trees[row_idx - 1][col_idx]
-        upper_trees = 1
-        for earlier_row in range(row_idx - 2, -1, -1):
-            if earlier_row < 0:
-                break
-            if first_tree <= trees[earlier_row][col_idx]:
-                upper_trees += 1
-                first_tree = trees[earlier_row][col_idx]
-            if trees[earlier_row][col_idx] == 9 or earlier_row == 0 or tree < trees[earlier_row][col_idx]:
-                break
-        visible_trees.append(upper_trees)
-    else:
-        visible_trees.append(0)
+    # Slice the tree list accordingly to get only the left or right portion
+    left, right = trees[position - left_index:position], trees[position + 1:position + right_side]
 
-    # Check down if not on lower border
-    if row_idx < height - 1:
-        first_tree = trees[row_idx + 1][col_idx]
-        lower_trees = 1
-        for later_row in range(row_idx + 1, height):
-            if first_tree <= trees[later_row][col_idx]:
-                lower_trees += 1
-                first_tree = trees[later_row][col_idx]
-            if trees[later_row][col_idx] == 9 or later_row == height - 1 or tree < trees[later_row][col_idx]:
-                break
-        visible_trees.append(lower_trees)
-    else:
-        visible_trees.append(0)
+    # Calculate the score by leaving only trees that are smaller and stop when the first tree that is equal or higher to the current tree
+    # Left side has to use reverse order so it is the viewing direction
+    l_score = sum([1 for _ in takewhile_including(lambda x: x < height, left[::-1])])
+    r_score = sum([1 for _ in takewhile_including(lambda x: x < height, right)])
 
-    product = 1
-    for i in visible_trees:
-        product *= i
-    return(product, visible_trees)
+    # Vertical
+    # Slicing using the positions calculated above, bottom takes the current tree and slices it off afterwards
+    top, bottom = trees[left_index:position:dimension], trees[position::dimension][1:]
+    t_score = sum([1 for _ in takewhile_including(lambda x: x < height, top[::-1])])
+    b_score = sum([1 for _ in takewhile_including(lambda x: x < height, bottom)])
+
+    return l_score * r_score * t_score * b_score
+    
+def takewhile_including(predicate, iterable):
+    """
+    Alternative takewhile function from itertools; keeps also the element that leads to the stop
+    """
+    for x in iterable:
+        if predicate(x):
+            yield x
+        else:
+            yield x
+            break
 
 def part1() -> int:
     # Part 1 of the puzzle
-    pass
-    # trees = get_input()
-    # visible_tree_map = generate_visibility_map(trees)
-    # return(sum([row.count(1) for row in visible_tree_map]))
+    trees = get_input()
+    visible_tree_map = generate_visibility_map(trees)
+    return(sum([row.count(1) for row in visible_tree_map]))
     
 
 def part2() -> int:
     # Part 2 of the puzzle
     trees = get_input()
-    visible_trees = calculate_scenice_view(trees, 1, 2)
-    print(visible_trees)
+    trees_flat = [tree for row in trees for tree in row]
+    scores = [get_view_score(trees_flat, idx, len(trees)) for idx in range(len(trees_flat))]
+    return max(scores)
 
 if __name__ == "__main__":
     print(f"Solution to Part1: {part1()}")
