@@ -1,7 +1,7 @@
 from os import path
 
 # Set True for my inputs and False for test inputs
-SOLUTION_MODE = True
+SOLUTION_MODE = False
 data_folder = "Inputs" if SOLUTION_MODE else "Test_inputs"
 
 # Open and prepare input
