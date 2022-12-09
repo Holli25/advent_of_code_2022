@@ -6,7 +6,16 @@ SOLUTION_MODE = True
 data_folder = "Inputs" if SOLUTION_MODE else "Test_inputs"
 
 # Move instructions for tail based on head position
-MOVE_LIST = {(2,0):(1,0), (2,1):(1,-1), (1,2):(1,-1), (0,2):(0,-1), (-1,2):(-1,-1), (-2,1):(-1,-1), (-2,0):(-1,0), (-2,-1):(-1,1), (-1,-2):(-1,1), (0,-2):(0,1), (1,-2):(1,1), (2,-1):(1,1), (2,2):(1,-1), (-2,2):(-1,-1), (-2,-2):(-1,1), (2,-2):(1,1)}
+MOVE_LIST = {(2,0):(1,0), (2,1):(1,1), (1,2):(1,1), (0,2):(0,1), (-1,2):(-1,1), (-2,1):(-1,1), (-2,0):(-1,0), (-2,-1):(-1,-1), (-1,-2):(-1,-1), (0,-2):(0,-1), (1,-2):(1,-1), (2,-1):(1,-1), (2,2):(1,1), (-2,2):(-1,1), (-2,-2):(-1,-1), (2,-2):(1,-1)}
+MOVES = {"R":[1,0], "L":[-1,0], "U":[0,-1], "D":[0,1]}
+
+def list_sum(list1:List[int], list2:List[int]) -> List[int]:
+    # Function sums two lists element-wise
+    return [i+j for i,j in zip(list1, list2)]
+
+def list_subtract(list1:List[int], list2:List[int]) -> List[int]:
+    # Function subtracts two lists element-wise
+    return [i-j for i,j in zip(list1, list2)]
 
 # Open and prepare input
 def get_input() -> List[Tuple[str, int]]:
@@ -20,69 +29,41 @@ def get_input() -> List[Tuple[str, int]]:
 
 def moves(instructions) -> int:
     # Function does every move in the instructions
-
-    # Create empty field to mark where the tail has been and initialized head and tail in the middle
+    # Create empty field to mark where the tail has been and initialize head and tail in the middle
     field = [[0] * 500 for _ in range(500)]
-    hx,hy = 250,250
-    tx,ty = 250,250
+    head, tail = [250,250], [250,250]
 
     for move in instructions:
-        # Move the head based on the instructions
         for _ in range(move[1]):
-            if move[0] == "R":
-                hx += 1
-            elif move[0] == "L":
-                hx -= 1
-            elif move[0] == "U":
-                hy -= 1
-            elif move[0] == "D":
-                hy += 1
-            else:
-                print("Something is messed up!")
+            # Move the head based on the instructions
+            head = list_sum(head, MOVES.get(move[0]))
 
             # Move the tail based on head position
-            tx,ty = move_tail(hx, hy, tx, ty)
-            field[ty][tx] = 1
-            # print(field)
+            tail = move_tail(head, tail)
+            field[tail[1]][tail[0]] = 1
     return sum([sum(row) for row in field])
 
 def moves_long_rope(instructions) -> int:
     # Function does every move in the instructions
-
-    # Create empty field to mark where the tail has been and initialized head and tail in the middle
+    # Create empty field to mark where the tail has been and initialize the rope in the middle with knots stacked on each other
     field = [[0] * 500 for _ in range(500)]
     rope = [[250,250] for _ in range(10)]
-    # hx,hy = 250,250
-    # tx,ty = 250,250
 
     for move in instructions:
-        # Move the head based on the instructions
         for _ in range(move[1]):
-            if move[0] == "R":
-                rope[0][0] += 1
-            elif move[0] == "L":
-                rope[0][0] -= 1
-            elif move[0] == "U":
-                rope[0][1] -= 1
-            elif move[0] == "D":
-                rope[0][1] += 1
-            else:
-                print("Something is messed up!")
+            # Move the knots; go through list and move the knot based on the knot before it, move the first knot based on the intended move
+            rope = [move_tail(rope[idx - 1], knot) if idx > 0 else list_sum(knot, MOVES.get(move[0])) for idx, knot in enumerate(rope)]
 
-            # Move the tail based on head position
-            for knot_number in range(1,10):
-                hx, hy = rope[knot_number - 1]
-                rope[knot_number] = move_tail(hx, hy, rope[knot_number][0], rope[knot_number][1])
-                if knot_number == 9:
-                    field[rope[knot_number][1]][rope[knot_number][0]] = 1
+            # Mark the current spot the last knot is in in the field, with 10 knots the last one has index 9
+            field[rope[9][1]][rope[9][0]] = 1
     
     return sum([sum(row) for row in field])
 
-def move_tail(hx:int, hy:int, tx:int, ty:int) -> Tuple[int]:
-    # Function moves the tail according to the current head position
-    separation = (hx-tx, ty-hy)
-    x, y = MOVE_LIST.get(separation, (0,0))
-    return (tx + x, ty + y)
+def move_tail(head:List[int], tail:List[int]) -> List[int]:
+    # Function returns the moved tail according to the current head position; only moves if needed
+    separation = tuple(list_subtract(head, tail))
+    tail_move = MOVE_LIST.get(separation, (0,0))
+    return list_sum(tail, tail_move)
 
 
 def part1() -> int:
